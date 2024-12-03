@@ -6,6 +6,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include <functional>
+#include <charconv>
 
 namespace aoc {
 
@@ -37,6 +39,26 @@ namespace aoc {
             result.emplace_back(input.substr(start_idx, size));
         }
         return result;
+    }
+
+    template<typename InType, typename OutType>
+    std::vector<OutType> map(const std::vector<InType>& input, std::function<OutType(const InType&)> mapper) {
+        std::vector<OutType> result;
+        result.reserve(input.size());
+        for (const auto& entry : input) {
+            result.push_back(mapper(entry));
+        }
+        return result;
+    }
+
+    template<typename T>
+    T str_view_to_type(std::string_view str) {
+        T value{};
+        const auto [_, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+        if (ec != std::errc()) {
+            throw std::runtime_error("Failed to convert entry to output type.");
+        }
+        return value;
     }
 
 }

@@ -1,0 +1,1 @@
+add_executable(day02_part1 day02_part1.cpp)

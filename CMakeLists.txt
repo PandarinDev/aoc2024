@@ -7,4 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 add_subdirectory(day01)
+add_subdirectory(day02)
