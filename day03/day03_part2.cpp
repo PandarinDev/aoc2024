@@ -51,9 +51,9 @@ int main() {
     auto end = std::sregex_iterator();
     std::size_t result = 0;
     for (auto i = begin; i != end; ++i) {
-        const auto start = i->position();
-        const auto end = i->position() + i->length() - 1;
-        if (is_enabled(start, end)) {
+        const auto pattern_start = i->position();
+        const auto pattern_end = i->position() + i->length() - 1;
+        if (is_enabled(pattern_start, pattern_end)) {
             const auto first = std::atoi((*i)[1].str().c_str());
             const auto second = std::atoi((*i)[2].str().c_str());
             result += first * second;
