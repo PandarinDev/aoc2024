@@ -21,21 +21,21 @@ namespace aoc {
         return str_stream.str();
     }
 
-    std::vector<std::string_view> split(std::string_view input, char delimiter) {
+    std::vector<std::string_view> split(std::string_view input, char delimiter, bool keep_empty = false) {
         std::vector<std::string_view> result;
         std::size_t start_idx = 0;
         for (std::size_t i = 0; i < input.size(); ++i) {
             char c = input[i];
             if (c == delimiter) {
                 const auto size = i - start_idx;
-                if (size > 0) {
+                if (size > 0 || keep_empty) {
                     result.emplace_back(input.substr(start_idx, size));
                 }
                 start_idx = i + 1;
             }
         }
         const auto size = input.size() - start_idx;
-        if (size > 0) {
+        if (size > 0 || keep_empty) {
             result.emplace_back(input.substr(start_idx, size));
         }
         return result;
