@@ -8,6 +8,7 @@
 #include <vector>
 #include <functional>
 #include <charconv>
+#include <optional>
 
 namespace aoc {
 
@@ -66,6 +67,34 @@ namespace aoc {
         std::hash<T> hasher;
         seed ^= hasher(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         return seed;
+    }
+
+    template<typename T>
+    std::optional<std::vector<T>> combinate_until(
+        const std::vector<T>& inputs,
+        std::size_t size,
+        const std::function<bool(const std::vector<T>&)>& stop_predicate) {
+        using ResultType = std::optional<std::vector<T>>;
+        std::function<ResultType(std::vector<T>&)> addElement = [&](std::vector<T>& current) -> ResultType {
+            // If max element size is reached test the result
+            if (current.size() == size) {
+                if (stop_predicate(current)) {
+                    return current;
+                }
+                return std::nullopt;
+            }
+            // Otherwise keep adding elements
+            for (const T& input : inputs) {
+                current.push_back(input);
+                if (const auto maybe_result = addElement(current); maybe_result.has_value()) {
+                    return maybe_result;
+                }
+                current.pop_back();
+            }
+            return std::nullopt;
+        };
+        std::vector<T> current;
+        return addElement(current);
     }
 
 }
