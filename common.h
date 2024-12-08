@@ -97,4 +97,25 @@ namespace aoc {
         return addElement(current);
     }
 
+    template<typename T>
+    std::vector<std::pair<T, T>> unique_pairs(const std::vector<T>& input) {
+        std::vector<std::pair<T, T>> pairs;
+        // Not very sophisticated, but works
+        auto contains_pair = [&pairs](const T& first, const T& second) {
+            return std::find(pairs.cbegin(), pairs.cend(), std::make_pair(first, second)) != pairs.cend() ||
+                std::find(pairs.cbegin(), pairs.cend(), std::make_pair(second, first)) != pairs.cend();
+        };
+        for (std::size_t i = 0; i < input.size(); ++i) {
+            for (std::size_t j = 0; j < input.size(); ++j) {
+                if (i == j) {
+                    continue;
+                }
+                if (!contains_pair(input[i], input[j])) {
+                    pairs.emplace_back(std::make_pair(input[i], input[j]));
+                }
+            }
+        }
+        return pairs;
+    }
+
 }
