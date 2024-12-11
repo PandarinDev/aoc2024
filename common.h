@@ -119,3 +119,17 @@ namespace aoc {
     }
 
 }
+
+namespace std {
+
+    template<typename FirstType, typename SecondType>
+    struct hash<std::pair<FirstType, SecondType>> {
+
+        std::size_t operator()(const std::pair<FirstType, SecondType>& pair) const {
+            std::hash<FirstType> hasher;
+            return aoc::hash_combine(hasher(pair.first), pair.second);
+        }
+
+    };
+
+}
