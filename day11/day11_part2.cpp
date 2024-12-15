@@ -4,6 +4,8 @@
 
 #include <common.h>
 
+static constexpr auto max_iterations = 75;
+
 int main() {
     const auto input = aoc::read_file("day11/input.txt");
     const auto entries = aoc::split(input, ' ');
@@ -26,26 +28,35 @@ int main() {
         const auto second_half = std::round(std::modf(split, &first_half) * quotient);
         return std::make_pair(static_cast<std::int64_t>(first_half), static_cast<std::int64_t>(second_half));
     };
-    // TODO: Brute-force for 75 iterations is just not cutting it.
-    // We are running out of memory, need to come up with something else
-    for (std::size_t i = 0; i < 75; ++i) {
-        std::cout << "Iteration#" << (i + 1) << std::endl;
-        std::vector<std::int64_t> updated_stones;
-        for (auto stone : stones) {
-            if (stone == 0) {
-                updated_stones.emplace_back(1);
-            }
-            else if (has_even_digits(stone)) {
-                const auto split_result = split_number(stone);
-                updated_stones.emplace_back(split_result.first);
-                updated_stones.emplace_back(split_result.second);
-            }
-            else {
-                updated_stones.emplace_back(stone * 2024);
-            }
+    using ProcessFunction = std::function<std::int64_t(std::int64_t, std::int64_t)>;
+    std::unordered_map<std::pair<std::int64_t, std::int64_t>, std::int64_t> cache;
+    auto memoize = [&](ProcessFunction func, std::int64_t stone, std::int64_t iteration) -> std::int64_t {
+        const auto func_args = std::make_pair(stone, iteration);
+        if (const auto it = cache.find(func_args); it != cache.cend()) {
+            return it->second;
         }
-        stones = std::move(updated_stones);
+        const auto result = func(stone, iteration);
+        cache.emplace(func_args, result);
+        return result;
+    };
+    ProcessFunction process = [&](std::int64_t stone, std::int64_t iteration) -> std::int64_t {
+        if (iteration == max_iterations) {
+            return 1;
+        }
+        if (stone == 0) {
+            return memoize(process, 1, iteration + 1);
+        }
+        else if (has_even_digits(stone)) {
+            const auto split_result = split_number(stone);
+            return memoize(process, split_result.first, iteration + 1) + memoize(process, split_result.second, iteration + 1);
+        }
+        return memoize(process, stone * 2024, iteration + 1);
+    };
+
+    std::size_t result = 0;
+    for (const auto value : stones) {
+        result += process(value, 0);
     }
-    std::cout << stones.size() << std::endl;
+    std::cout << result << std::endl;
     return 0;
 }
