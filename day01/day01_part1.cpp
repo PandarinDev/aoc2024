@@ -7,8 +7,8 @@
 
 int main() {
     const auto input = aoc::read_file("day01/input.txt");
-    std::vector<std::size_t> left_numbers;
-    std::vector<std::size_t> right_numbers;
+    std::vector<std::int64_t> left_numbers;
+    std::vector<std::int64_t> right_numbers;
     for (const auto& line : aoc::split(input, '\n')) {
         const auto entries = aoc::split(line, ' ');
         if (entries.size() != 2) {
