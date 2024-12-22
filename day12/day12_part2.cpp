@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <array>
+#include <limits>
 
 #include <common.h>
 
@@ -47,50 +48,57 @@ struct Plot {
         return coordinates.size();
     }
 
+    // Returns [min_x, max_x, min_y, max_y]
+    std::array<std::int64_t, 4> boundaries() const {
+        std::int64_t min_x, max_x, min_y, max_y;
+        min_x = min_y = std::numeric_limits<std::int64_t>::max();
+        max_x = max_y = std::numeric_limits<std::int64_t>::min();
+        for (const auto& coordinate : coordinates) {
+            if (coordinate.x < min_x) min_x = coordinate.x;
+            if (coordinate.x > max_x) max_x = coordinate.x;
+            if (coordinate.y < min_y) min_y = coordinate.y;
+            if (coordinate.y > max_y) max_y = coordinate.y;
+        }
+        return { min_x, max_x, min_y, max_y };
+    }
+
     std::size_t perimeter() const {
-        auto is_neighbor = [&](const Coordinate& coord, const std::unordered_set<Coordinate>& container) {
+        auto contains = [&](const std::unordered_set<Coordinate>& container, const Coordinate& coord) {
             const auto it = container.find(coord);
             return it != container.cend() ? 1 : 0;
         };
-        // First place fences
-        std::unordered_set<Coordinate> fences;
-        for (const auto& coord : coordinates) {
-            std::array<Coordinate, 4> potential_neighbors {
-                coord.up(), coord.down(), coord.left(), coord.right() };
-            
-            for (const auto& maybe_neighbor : potential_neighbors) {
-                // If a neighboring field does not contain a neighbor add a fence instead
-                if (!is_neighbor(maybe_neighbor, coordinates)) {
-                    // TODO: Fences cannot be placed on a grid like structure like this
-                    // as that will lead to "collisions" between horizontal and vertical
-                    // fences.
-                    fences.emplace(maybe_neighbor);
+        // This solution is probably way too complicated and there's an easier way, but oh well
+        std::size_t perimeter = 0;
+        std::unordered_set<Coordinate> left_fences, right_fences, up_fences, down_fences;
+        auto perimeter_check = [&](const std::unordered_set<Coordinate>& fences, const Coordinate& first, const Coordinate& second) {
+            if (!contains(fences, first) && !contains(fences, second)) {
+                ++perimeter;
+            }
+        };
+        auto [min_x, max_x, min_y, max_y] = boundaries();
+        for (std::int64_t y = min_y; y <= max_y; ++y) {
+            for (std::int64_t x = min_x; x <= max_x; ++x) {
+                Coordinate coordinate(x, y);
+                if (!contains(coordinates, coordinate)) {
+                    continue;
+                }
+                if (const auto up = coordinate.up(); !contains(coordinates, up)) {
+                    up_fences.emplace(coordinate);
+                    perimeter_check(up_fences, coordinate.left(), coordinate.right());
+                }
+                if (const auto down = coordinate.down(); !contains(coordinates, down)) {
+                    down_fences.emplace(coordinate);
+                    perimeter_check(down_fences, coordinate.left(), coordinate.right());
+                }
+                if (const auto left = coordinate.left(); !contains(coordinates, left)) {
+                    left_fences.emplace(coordinate);
+                    perimeter_check(left_fences, coordinate.up(), coordinate.down());
+                }
+                if (const auto right = coordinate.right(); !contains(coordinates, right)) {
+                    right_fences.emplace(coordinate);
+                    perimeter_check(right_fences, coordinate.up(), coordinate.down());
                 }
             }
-        }
-        // Then walk along fences to find sections
-        std::unordered_set<Coordinate> processed_coordinates;
-        std::function<void(const Coordinate&)> process = [&](const Coordinate& coord) {
-            // Skip already processed plots
-            if (const auto it = processed_coordinates.find(coord); it != processed_coordinates.cend()) {
-                return;
-            }
-            if (const auto it = fences.find(coord); it == fences.cend()) {
-                return;
-            }
-            processed_coordinates.emplace(coord);
-            process(coord.up());
-            process(coord.down());
-            process(coord.left());
-            process(coord.right());
-        };
-        std::size_t perimeter = 0;
-        for (const auto& coord : fences) {
-            if (const auto it = processed_coordinates.find(coord); it != processed_coordinates.cend()) {
-                continue;
-            }
-            process(coord);
-            perimeter += 1;
         }
         return perimeter;
     }
