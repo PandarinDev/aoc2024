@@ -118,6 +118,15 @@ namespace aoc {
         return pairs;
     }
 
+    // Special case of split when wanting to cut an input in half, useful with destructuring
+    std::pair<std::string_view, std::string_view> cut(std::string_view input, std::string_view delimiter) {
+        const auto delimiter_pos = input.find(delimiter);
+        if (delimiter_pos == std::string_view::npos) {
+            throw std::runtime_error("Delimiter not found in input");
+        }
+        return std::make_pair(input.substr(0, delimiter_pos), input.substr(delimiter_pos + delimiter.size()));
+    }
+
 }
 
 namespace std {
